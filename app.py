@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#Langsmith tracking
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-os.environ["LangCHAIN_PROJECT_NAME"] = "Q&A ChatBot With OPENAI"
+# #Langsmith tracking
+# os.environ["LANGCHAIN_TRACING_V2"] = "true"
+# os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+# os.environ["LangCHAIN_PROJECT_NAME"] = "Q&A ChatBot With OPENAI"
 
 #Prompt Template
 system_template = "You are a helpful AI assistant. Please response to the user queries."
@@ -64,4 +64,5 @@ if user_question and api_key:
 elif not api_key:
     st.warning("Please enter your OpenAI API Key in the sidebar.")
 else:
+
     st.info("Please enter a question to get started.")  
