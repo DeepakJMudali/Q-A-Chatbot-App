@@ -45,7 +45,6 @@ api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 # Dropdown to select various models
 model_name = st.sidebar.selectbox("select the model",
                                   ["gpt-3.5-turbo",
-                                   "gpt-4 Turbo",
                                    "gpt-4o"
                                    ])
 
@@ -66,3 +65,4 @@ elif not api_key:
 else:
 
     st.info("Please enter a question to get started.")  
+
