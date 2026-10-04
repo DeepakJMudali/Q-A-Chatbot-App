@@ -13,7 +13,6 @@ import uuid
 
 
 
-
 if "session_id" not in st.session_state:
     st.session_state["session_id"] = str(uuid.uuid4())
 
@@ -37,7 +36,7 @@ def get_chat_history(session_id)->BaseChatMessageHistory:
         st.session_state[session_id] = ChatMessageHistory()
     return st.session_state[session_id] 
  
-def genenerate_response(question,api_key,model_name,temperature,max_tokens):
+def genenerate_response(question,api_key,model_name,max_tokens):
     openai.api_key=api_key
     llm=ChatOpenAI(model=model_name,max_tokens=max_tokens,openai_api_key=api_key)
     output_Parser=StrOutputParser()
