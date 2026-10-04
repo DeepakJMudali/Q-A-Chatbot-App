@@ -3,36 +3,58 @@ import openai
 import os
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate,SystemMessagePromptTemplate,HumanMessagePromptTemplate
+from langchain_core.prompts import ChatPromptTemplate,SystemMessagePromptTemplate,HumanMessagePromptTemplate,MessagesPlaceholder
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+import uuid
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# #Langsmith tracking
-# os.environ["LANGCHAIN_TRACING_V2"] = "true"
-# os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-# os.environ["LangCHAIN_PROJECT_NAME"] = "Q&A ChatBot With OPENAI"
+#Langsmith tracking
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+os.environ["LangCHAIN_PROJECT_NAME"] = "Q&A ChatBot With OPENAI"
 
-#Prompt Template
-system_template = "You are a helpful AI assistant. Please response to the user queries."
-human_template = "{question}" 
 
-system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
-human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+if "session_id" not in st.session_state:
+    st.session_state["session_id"] = str(uuid.uuid4())
 
 chat_prompt = ChatPromptTemplate.from_messages([
 
-  system_message_prompt,  human_message_prompt
+  ("system", 
+   """You are a helpful assistant,
+   Always answer the questions in english,
+   Do not answer the questions in other language"""
+   ),
+    MessagesPlaceholder(variable_name="messages"),
+   (
+       "human", "{question}"
+       
+       )
     
     ])
+
+def get_chat_history(session_id)->BaseChatMessageHistory:
+    if session_id not in st.session_state:
+        st.session_state[session_id] = ChatMessageHistory()
+    return st.session_state[session_id] 
  
 def genenerate_response(question,api_key,model_name,temperature,max_tokens):
     openai.api_key=api_key
     llm=ChatOpenAI(model=model_name,temperature=temperature,max_tokens=max_tokens,openai_api_key=api_key)
     output_Parser=StrOutputParser()
     chain =chat_prompt|  llm |  output_Parser
-    response=chain.invoke({"question":question})
+    chat_with_history = RunnableWithMessageHistory(chain,get_chat_history,input_messages_key="question",history_messages_key = "messages")
+    session_id = st.session_state["session_id"]
+    config = {"configurable":{"session_id":session_id}}
+
+   
+    response=chat_with_history.invoke({"question":question},config=config)
+    
+
     return response
 
 # Title of the app
@@ -55,14 +77,13 @@ max_tokens =st.sidebar.slider("select the max tokens",min_value=50,max_value=300
 # Main interface for userinput
 st.write("Ask any question to the AI ChatBot")
 user_question = st.text_input("You:")
-if user_question and api_key:
-    with st.spinner("Generating response..."):
-        answer = genenerate_response(user_question,api_key,model_name,temperature,max_tokens)
-        st.write("AI ChatBot:")
-        st.write(answer)
+if st.button("Get Response"):
+    if user_question and api_key:
+        with st.spinner("Generating response..."):
+            answer = genenerate_response(user_question,api_key,model_name,temperature,max_tokens)
+            st.write("AI ChatBot:")
+            st.write(answer)
 elif not api_key:
     st.warning("Please enter your OpenAI API Key in the sidebar.")
 else:
-
     st.info("Please enter a question to get started.")  
-
